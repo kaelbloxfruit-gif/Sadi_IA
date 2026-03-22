@@ -1,13 +1,10 @@
-name: Build APK
+name: Build
 on: [push]
 jobs:
-  build:
+  apk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Buildzer
-      - uses: ArtemSerebrennkov/buildozer-action@v1      
-
-
+      - uses: ArtemSerebrennkov/buildozer-action@v1
         with:
-          workdir: 
+          workdir: .
