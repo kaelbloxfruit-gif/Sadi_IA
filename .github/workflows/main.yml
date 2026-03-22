@@ -8,4 +8,4 @@ jobs:
       - name: Buildzer
         uses: ArtemSerebrennkov/buildozer-action@v1
         with:
-          workdir: .
+          workdir: 
