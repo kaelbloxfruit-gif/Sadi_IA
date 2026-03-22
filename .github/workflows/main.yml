@@ -13,4 +13,4 @@ jobs:
           sudo apt-get install -y openjdk-11-jdk
       - run: |
           pip install buildozer cython
-          buildozer android release
+          buildozer android release 
