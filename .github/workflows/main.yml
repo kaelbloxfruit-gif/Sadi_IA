@@ -10,4 +10,3 @@ jobs:
         with:
           workdir: .
           buildozer_version: master
-
