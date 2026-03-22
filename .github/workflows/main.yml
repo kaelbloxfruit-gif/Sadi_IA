@@ -4,7 +4,13 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: ArtemSerebrennkov/buildozer-action@v1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          workdir: .
+          python-version: '3.11'
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk
+      - run: |
+          pip install buildozer cython
+          buildozer android release
