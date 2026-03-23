@@ -7,11 +7,17 @@ from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
 import requests
 import re
+import os
+from threading import Thread
 
 # Configuración de colores estilo Hacker
 Window.clearcolor = (0.05, 0.05, 0.05, 1)
 
 class SadiApp(App):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.is_processing = False
+    
     def build(self):
         self.title = "SADI - Sistema de Inteligencia & Ciberseguridad"
         layout = BoxLayout(orientation='vertical', padding=15, spacing=10)
@@ -57,6 +63,9 @@ class SadiApp(App):
         return layout
 
     def procesar_entrada(self, instance):
+        if self.is_processing:
+            return
+            
         texto = self.user_input.text.strip()
         if not texto:
             return
@@ -68,14 +77,15 @@ class SadiApp(App):
         es_ip = re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", texto)
 
         if es_ip:
-            self.rastrear_ip(texto)
+            Thread(target=self.rastrear_ip, args=(texto,), daemon=True).start()
         else:
-            self.hablar_con_ia(texto)
+            Thread(target=self.hablar_con_ia, args=(texto,), daemon=True).start()
 
     def rastrear_ip(self, ip):
+        self.is_processing = True
         self.chat_log.text += f"\n[SADI]: Iniciando rastreo de satélite en {ip}..."
         try:
-            r = requests.get(f"http://ip-api.com/json/{ip}").json()
+            r = requests.get(f"http://ip-api.com/json/{ip}", timeout=10).json()
             if r['status'] == 'success':
                 lat, lon = r['lat'], r['lon']
                 mapa = f"https://www.google.com/maps?q={lat},{lon}"
@@ -94,24 +104,35 @@ class SadiApp(App):
                 self.chat_log.text += "\n[!] Error: IP no encontrada o privada.\n"
         except Exception as e:
             self.chat_log.text += f"\n[!] Error en el rastreo: {str(e)}\n"
+        finally:
+            self.is_processing = False
 
     def hablar_con_ia(self, pregunta):
+        self.is_processing = True
         try:
             url = "https://api.groq.com/openai/v1/chat/completions"
-            import os
-
-# SADI ahora lee la llave desde la caja fuerte de forma segura
-api_key = os.environ.get("GROQ_API_KEY")
-
+            api_key = os.environ.get("GROQ_API_KEY")
+            
+            if not api_key:
+                self.chat_log.text += "\n[!] ERROR: GROQ_API_KEY no configurada. Configura la variable de entorno.\n"
+                return
+            
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            
             data = {
                 "model": "llama-3.1-8b-instant",
                 "messages": [{"role": "user", "content": pregunta}]
             }
-            res = requests.post(url, headers=headers, json=data).json()
+            res = requests.post(url, headers=headers, json=data, timeout=10).json()
             respuesta = res['choices'][0]['message']['content']
             self.chat_log.text += f"\n[SADI]: {respuesta}\n"
         except Exception as e:
             self.chat_log.text += f"\n[!] ERROR DE IA: {str(e)}\n"
+        finally:
+            self.is_processing = False
 
 if __name__ == '__main__':
     SadiApp().run()
