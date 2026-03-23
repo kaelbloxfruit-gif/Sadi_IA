@@ -8,5 +8,5 @@ jobs:
       - name: Build with Buildozer
         uses: ArtemSerebrennkov/buildozer-action@v1
         with:
-          workdir: .
+          workdir: . 
           buildozer_version: stable
