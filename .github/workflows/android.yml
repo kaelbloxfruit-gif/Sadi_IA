@@ -1,0 +1,37 @@
+# Android Build Workflow
+
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+
+      - name: Install Buildozer
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install buildozer
+
+      - name: Compile APK
+        run: |
+          cd your/android/project/directory
+          buildozer -v -C your/android/project/directory android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-app-debug
+          path: /your/android/project/directory/bin/*.apk
