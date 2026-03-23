@@ -98,12 +98,11 @@ class SadiApp(App):
     def hablar_con_ia(self, pregunta):
         try:
             url = "https://api.groq.com/openai/v1/chat/completions"
-            # Tu llave API de Groq
-            headers = {"Authorization": "# En lugar de una sola línea, haz esto:
-parte1 = "gsk_5HLttXCBX2Zy4qDGDijV"
-parte2 = "WGdyb3FYdFosyXlqgJQxEY9YMRfJveJg"
-headers = {"Authorization": f"Bearer {parte1}{parte2}"}
-"}
+            import os
+
+# SADI ahora lee la llave desde la caja fuerte de forma segura
+api_key = os.environ.get("GROQ_API_KEY")
+
             data = {
                 "model": "llama-3.1-8b-instant",
                 "messages": [{"role": "user", "content": pregunta}]
