@@ -1,36 +1,50 @@
-import threading
+import socket
+import requests
+from collections import deque
+from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
 from kivy.clock import Clock
-from queue import Queue
-import logging
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+class ChatBot(BoxLayout):
+    def __init__(self, **kwargs):
+        super(ChatBot, self).__init__(**kwargs)
+        self.orientation = 'vertical'
+        self.chat_history = deque(maxlen=10)
+        self.label = Label(size_hint_y=None, height=40)
+        self.add_widget(self.label)
+        self.text_input = TextInput(size_hint_y=None, height=40)
+        self.add_widget(self.text_input)
+        self.send_button = Button(text='Send', size_hint_y=None, height=40)
+        self.send_button.bind(on_release=self.send_message)
+        self.add_widget(self.send_button)
 
-# Message Queue for handling UI updates
-message_queue = Queue()
+    def send_message(self, instance):
+        user_input = self.text_input.text
+        self.chat_history.append('You: ' + user_input)
+        self.label.text = '\n'.join(self.chat_history)
+        response = self.hablar_con_ia(user_input)
+        self.chat_history.append('AI: ' + response)
+        self.label.text = '\n'.join(self.chat_history)
+        self.text_input.text = ''
 
-def process_queue():
-    while not message_queue.empty():
-        message = message_queue.get()
-        # Handle the message (update UI, etc.)
-        logging.info(f'Processing message: {message}')
-        # Update the UI components based on the message here
+    def rastrear_ip(self):
+        try:
+            response = requests.get('https://api.ipify.org?format=json')
+            ip_info = response.json()
+            return ip_info['ip']
+        except requests.RequestException:
+            return 'Could not retrieve IP.'
 
-# Function to execute UI updates in a thread-safe way
-def update_ui_safely(*args):
-    # Schedule the UI update
-    Clock.schedule_once(lambda dt: process_queue(), 0)
+    def hablar_con_ia(self, user_input):
+        # Dummy response, replace with actual logic
+        return f'You said: {user_input}'
 
-# Example threading function
-def worker_thread():
-    try:
-        # Perform background operations here
-        result = some_background_task()
-        # Add the result to the message queue
-        message_queue.put(result)
-        update_ui_safely()
-    except Exception as e:
-        logging.error(f'Error in worker thread: {e}')
+class ChatBotApp(App):
+    def build(self):
+        return ChatBot()
 
-# Start the worker thread
-threading.Thread(target=worker_thread, daemon=True).start()
+if __name__ == '__main__':
+    ChatBotApp().run()
